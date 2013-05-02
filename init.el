@@ -1,21 +1,12 @@
 ;;
-;; UTILITIES
+;; PACKAGES
 ;;
+(require 'package)
+(add-to-list 'package-archives
+             '("marmalade" .
+               "http://marmalade-repo.org/packages/"))
+(package-initialize)
 
-;; CEDET
-;; See cedet/common/cedet.info for configuration details.
-;; (load-file "~/.emacs.d/vendor/cedet-1.0/common/cedet.el")
-;; Enable EDE (Project Management) features
-;; (global-ede-mode 1)
-;; Enabling Semantic (code-parsing, smart completion) features
-;; Select one of the following:
-;; * This enables the database and idle reparse engines
-;; (semantic-load-enable-minimum-features)
-
-;; ECB
-;; (add-to-list 'load-path "~/.emacs.d/vendor/ecb-2.40")
-;; (require 'ecb)
-;; (setq ecb-source-path (quote ("/home/cristi")))
 
 ;; Interactively Do Things (highly recommended, but not strictly required)
 (require 'ido)
@@ -30,6 +21,7 @@
 (yas/load-directory "~/.emacs.d/vendor/yasnippets-rails/rails-snippets")
 (yas/load-directory "~/.emacs.d/vendor/yasnippets-rspec/rspec-snippets")
 
+;; browser
 (setq browse-url-browser-function 'browse-url-generic
       browse-url-generic-program "chromium-browser")
 
@@ -43,13 +35,22 @@
 ;; save recently opened files
 (require 'recentf)
 (recentf-mode 1)
+(global-set-key "\C-x\ r" 'recentf-open-files)
+
 
 ;; terminal background color
 (setq term-default-bg-color "#211E1E")
 
 ;; font
 (set-default-font "Bitstream Vera Sans Mono-9")
-(custom-set-faces '(default ((t (:height 90 :family "Bitstream Vera Sans Mono" :embolden t)))))
+
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(default ((t (:height 90 :family "Bitstream Vera Sans Mono" :embolden t))))
+ '(mumamo-background-chunk-submode1 ((((class color) (min-colors 88) (background dark)) (:background "gray20")))))
 
 ;; autocomplete from buffers
 ;(add-to-list 'load-path "~/.emacs.d/")
@@ -74,6 +75,8 @@
 (require 'bar-cursor)
 (bar-cursor-mode 1)
 
+(setq isearch-allow-scroll t)
+
 ;; show matching parenthesis
 (show-paren-mode 1)
 (set-face-background 'show-paren-match-face (face-background 'default))
@@ -94,6 +97,29 @@
                ad-do-it)))))
 
 (yas/advise-indent-function 'ruby-indent-line)
+
+
+;; restore emacs after shutdown
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(ansi-color-faces-vector [default bold shadow italic underline bold bold-italic bold])
+ '(ansi-color-names-vector ["#242424" "#e5786d" "#95e454" "#cae682" "#8ac6f2" "#333366" "#ccaa8f" "#f6f3e8"])
+ '(browse-url-browser-function (quote browse-url-default-browser))
+ '(custom-enabled-themes (quote (dichromacy)))
+ '(custom-safe-themes (quote ("82d2cac368ccdec2fcc7573f24c3f79654b78bf133096f9b40c20d97ec1d8016" "bb08c73af94ee74453c90422485b29e5643b73b05e8de029a6909af6a3fb3f58" "06f0b439b62164c6f8f84fdda32b62fb50b6d00e8b01c2208e55543a6337433a" "628278136f88aa1a151bb2d6c8a86bf2b7631fbea5f0f76cba2a0079cd910f7d" "1b8d67b43ff1723960eb5e0cba512a2c7a2ad544ddb2533a90101fd1852b426e" default)))
+ '(desktop-enable t nil (desktop))
+ '(desktop-save-mode t nil (desktop))
+ '(fci-rule-color "#efefef")
+ '(js2-basic-offset 2)
+ '(org-agenda-files (quote ("~/org/agenda.org")))
+ '(save-place t nil (saveplace))
+ '(speedbar-mode-specific-contents-flag t)
+ '(speedbar-show-unknown-files t)
+ '(speedbar-use-images nil))
+
 
 
 ;; autoindent when paste
@@ -140,30 +166,6 @@
 ;; exuberant tags
 (setq rinari-tags-file-name "TAGS")
 
-;; perl ack
-;; http://rooijan.za.net/code/emacs-lisp/ack-el
-;; http://blog.tobiascrawley.net/2010/02/11/emacs-tip-running-ack-in-the-project-root-wrinari/
-(add-to-list 'load-path "~/.emacs.d/vendor/")
-(require 'ack-emacs)
-
-;; redo+
-(add-to-list 'load-path "~/.emacs.d/vendor/redo+/")
-(require 'redo+)
-
-;; fullscreen
-(defun toggle-fullscreen (&optional f)
-  (interactive)
-  (let ((current-value (frame-parameter nil 'fullscreen)))
-    (set-frame-parameter nil 'fullscreen
-                         (if (equal 'fullboth current-value)
-                             (if (boundp 'old-fullscreen) old-fullscreen nil)
-                           (progn (setq old-fullscreen current-value)
-                                  'fullboth)))))
-; Make new frames fullscreen by default. Note: this hook doesn't do
-; anything to the initial frame if it's in your .emacs, since that file is
-; read _after_ the initial frame is created.
-(add-hook 'after-make-frame-functions 'toggle-fullscreen)
-(put 'downcase-region 'disabled nil)
 
 ;; C-a toggle bignning of line / beginning of code line
 (defun beginning-of-line-or-indentation ()
@@ -203,6 +205,18 @@
       (if quote
           (insert "\"")))))
 
+
+;; make json beautiful
+;(defun beautify-json ()
+;  (interactive)
+;  (let ((b (if mark-active (min (point) (mark)) (point-min)))
+;        (e (if mark-active (max (point) (mark)) (point-max))))
+;    (shell-command-on-region b e
+;     "python -mjson.tool" (current-buffer) t)))
+;(define-key json-mode-map (kbd "C-c C-f") 'beautify-json)
+
+
+
 ;; shift block to left and right by a certain number of positions
 (defun shift-text (distance)
   (if (use-region-p)
@@ -223,6 +237,7 @@
   (interactive "p")
   (shift-text (- count)))
 
+
 ;; cursor should not blink
 (blink-cursor-mode -1)
 (tool-bar-mode -1)
@@ -231,10 +246,6 @@
 ;; no splash screen. disable splash screen and startup message
 (setq inhibit-startup-message t)
 (setq initial-scratch-message nil)
-
-;; jabber
-(add-to-list 'load-path "~/.emacs.d/vendor/emacs-jabber-0.8.91/")
-(require 'jabber-autoloads)
 
 
 ;; CUA mode
@@ -262,9 +273,6 @@
 ;; Set to <your Dropbox root directory>/MobileOrg.
 (setq org-mobile-directory "~/Dropbox-personal/Dropbox/MobileOrg")
 
-;; sr-speedbar
-;(add-to-list 'load-path "~/.emacs.d/vendor/")
-;(require 'sr-speedbar)
 
 ;; disable scrolling
 (scroll-bar-mode -1)
@@ -280,7 +288,7 @@
 (setq ring-bell-function 'ignore)
 
 ;; julia mode
-(require 'julia-mode "~/.emacs.d/vendor/julia-mode.el")
+;; (require 'julia-mode "~/.emacs.d/vendor/julia-mode.el")
 
 ;; markdown mode
 (add-to-list 'load-path "~/.emacs.d/vendor/markdown-mode")
@@ -300,6 +308,14 @@
 ;;       (cons '("\\.d" . d-mode) auto-mode-alist))
 
 
+(setq load-path (cons (expand-file-name "~/.emacs.d/vendor") load-path))
+(require 'cmake-mode)
+(setq auto-mode-alist
+       (append '(("CMakeLists\\.txt\\'" . cmake-mode)
+                 ("\\.cmake\\'" . cmake-mode))
+               auto-mode-alist))
+
+
 
 ;; scala mode
 (add-to-list 'load-path "~/.emacs.d/vendor/scala-emacs")
@@ -313,6 +329,10 @@
        (yas/minor-mode-on)
        (ensime-scala-mode-hook)
 ))
+(when (and (require 'scala-mode-auto nil 'noerror) (require 'ensime nil 'noerror))
+  (add-to-list 'auto-mode-alist '("\\.scala.html$" . scala-mode))
+  (add-hook 'scala-mode-hook 'ensime-scala-mode-hook))
+
 
 ;; show colors in css files
 (add-to-list 'auto-mode-alist '("\\.css$" . css-mode))
@@ -325,6 +345,13 @@
              ;(auto-complete-mode)
 ))
 
+
+;; highlight FIXME, TODO, BUG
+(add-to-list 'load-path "~/.emacs.d/vendor")
+(require 'fic-mode)
+(add-hook 'prog-mode-hook 'fic-mode)
+; (require 'myfixme)
+; (myfixme-mode 1)
 
 ;; iedit
 (require 'iedit)
@@ -396,6 +423,10 @@ region\) apply comment-or-uncomment to the current line"
 ;; delete blank lines
 (global-set-key [C-S-d] 'delete-blank-lines)
 
+;; no # -*- coding: utf-8 -*- on save
+(setq ruby-insert-encoding-magic-comment nil)
+
+
 ;; move mouse to the newly created window after splitting
 (defadvice split-window-horizontally (after rebalance-windows activate)
   (balance-windows))
@@ -420,52 +451,9 @@ region\) apply comment-or-uncomment to the current line"
       (unless (file-exists-p dir)
         (make-directory dir)))))
 
-;;
-;; COLORS
-;;
-(add-to-list 'load-path "~/.emacs.d/vendor/color-theme")
-(require 'color-theme)
-(add-to-list 'load-path "~/.emacs.d/vendor/color-theme/themes")
-(require 'color-theme-zenburn)
-(require 'color-theme-monokai)
-(setq color-theme-is-global t)
-(add-to-list 'load-path "~/.emacs.d/vendor/color-theme/themes/emacs-color-theme-solarized")
-(require 'color-theme-solarized)
-(eval-after-load "color-theme"
-  '(progn
-     ;(color-theme-initialize)
-     ;(color-theme-julie)
-     ;(color-theme-deep-blue)
-     ;(color-theme-dotshare)
-     ;(color-theme-greiner)
-     ;(color-theme-zenburn)
-     (color-theme-solarized-light)
-     ))
 
-;; mamumo colors
-(custom-set-variables
-  ;; custom-set-variables was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
- '(browse-url-browser-function (quote browse-url-default-browser))
- '(jabber-account-list (quote (("17828_76730@chat.hipchat.com" (:network-server . "conf.hipchat.com") (:port . 5222) (:connection-type . starttls)))))
- '(jabber-auto-reconnect nil)
- '(jabber-history-enable-rotation t)
- '(jabber-history-enabled t)
- '(jabber-history-muc-enabled t)
- '(jabber-history-size-limit 2048)
- '(js2-basic-offset 2)
- '(org-agenda-files (quote ("~/org/agenda.org")))
- '(speedbar-mode-specific-contents-flag t)
- '(speedbar-show-unknown-files t)
- '(speedbar-use-images nil))
-(custom-set-faces
-  ;; custom-set-faces was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
- '(mumamo-background-chunk-submode1 ((((class color) (min-colors 88) (background dark)) (:background "gray20")))))
+;; (require 'adwaita) ; do M-x load-theme
+
 
 
 ;;
@@ -488,13 +476,6 @@ region\) apply comment-or-uncomment to the current line"
 (setq load-path (cons "/usr/local/share/emacs/site-lisp" load-path))
 (require 'org-install)
 (add-to-list 'auto-mode-alist '("\\.org\\'" . org-mode))
-
-;; textmate
-;(add-to-list 'load-path "~/.emacs.d/vendor/textmate.el")
-;(add-to-list 'load-path "~/.emacs.d/topfunky")
-;(require 'textmate)
-;(require 'topfunky/textmate-ext)
-;(textmate-mode)
 
 ;; ruby electric
 (add-hook 'ruby-mode-hook
@@ -531,11 +512,22 @@ region\) apply comment-or-uncomment to the current line"
 (add-to-list 'load-path "~/.emacs.d/vendor/nxhtml/util/")
 (require 'mumamo-fun)
 (setq mumamo-chunk-coloring 1)
-(add-to-list 'auto-mode-alist '("\\.rhtml\\'" . eruby-html-mumamo))
-(add-to-list 'auto-mode-alist '("\\.html\\.erb\\'" . eruby-html-mumamo))
-(add-to-list 'auto-mode-alist '("\\.jst\\.eco\\'" . eruby-html-mumamo))
-(add-to-list 'auto-mode-alist '("\\.js\\.erb\\'" . eruby-javascript-mumamo))
-(add-to-list 'auto-mode-alist '("\\.js\\.rjs\\'" . eruby-javascript-mumamo))
+(add-to-list 'auto-mode-alist '("\\.rhtml\\'" . html-mumamo))
+(add-to-list 'auto-mode-alist '("\\.html\\.erb\\'" . html-mumamo))
+(add-to-list 'auto-mode-alist '("\\.jst\\.eco\\'" . html-mumamo))
+(add-to-list 'auto-mode-alist '("\\.js\\.erb\\'" . javascript-mumamo))
+(add-to-list 'auto-mode-alist '("\\.js\\.rjs\\'" . javascript-mumamo))
+(add-to-list 'auto-mode-alist '("\\.scala\\.html\\'" . html-mumamo)) ; TODO must fix; it's scala not ruby
+;; Mumamo is making emacs 23.3 freak out:
+(when (and (equal emacs-major-version 23)
+           (equal emacs-minor-version 3))
+  (eval-after-load "bytecomp"
+    '(add-to-list 'byte-compile-not-obsolete-vars
+                  'font-lock-beginning-of-syntax-function))
+  ;; tramp-compat.el clobbers this variable!
+  (eval-after-load "tramp-compat"
+    '(add-to-list 'byte-compile-not-obsolete-vars
+                  'font-lock-beginning-of-syntax-function)))
 ;; (add-to-list 'load-path "~/.emacs.d/vendor/")
 ;; (require 'nanoc-mumamo)
 
@@ -555,9 +547,6 @@ region\) apply comment-or-uncomment to the current line"
   '(lambda ()
      (define-key yaml-mode-map "\C-m" 'newline-and-indent)))
 
-;; notmuch
-(require 'notmuch)
-
 ;; show file name
 (setq frame-title-format
       (list (format "%s %%S: %%j " (system-name))
@@ -574,13 +563,41 @@ region\) apply comment-or-uncomment to the current line"
 (global-set-key (kbd "C-c t") 'scratch)
 
 
+(setq load-path (append (list (expand-file-name "~/.emacs.d/vendor/lilypond")) load-path))
 
-;;
-;; OTHER DEV
-;;
+;; (add-to-list 'load-path "~/.emacs.d/vendor/lilypond")
+;; (require 'lilypond-mode)
+(autoload 'LilyPond-mode "lilypond-mode" "LilyPond Editing Mode" t)
+(add-to-list 'auto-mode-alist '("\\.ly$" . LilyPond-mode))
+(add-to-list 'auto-mode-alist '("\\.ily$" . LilyPond-mode))
+(add-hook 'LilyPond-mode-hook (lambda () (turn-on-font-lock)))
 
-;; android development
-;;(load "~/.emacs.d/android-development.el")
+
+
+;; format json
+(defun json-format ()
+  (interactive)
+  (save-excursion
+    (shell-command-on-region (mark) (point) "python -m json.tool" (buffer-name) t)
+    )
+  )
+
+;; format xml
+(defun xml-format (begin end)
+  "Pretty format XML markup in region. You need to have nxml-mode
+http://www.emacswiki.org/cgi-bin/wiki/NxmlMode installed to do
+this.  The function inserts linebreaks to separate tags that have
+nothing but whitespace between them.  It then indents the markup
+by using nxml's indentation rules."
+  (interactive "r")
+  (save-excursion
+    (nxml-mode)
+    (goto-char begin)
+    (while (search-forward-regexp "\>[ \\t]*\<" nil t)
+      (backward-char) (insert "\n"))
+    (indent-region begin end))
+  (message "Ah, much better!"))
+
 
 (setq
  scroll-margin 0
